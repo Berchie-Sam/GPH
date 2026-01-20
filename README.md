@@ -49,8 +49,8 @@ cd GPH
 
 2. Create a virtual environment:
 ```bash
-python -m venv rgtenv
-source rgtenv/bin/activate  # On Windows: rgtenv\Scripts\activate
+python -m venv virtual_env
+source virtual_env/bin/activate  # On Windows: virtual_env\Scripts\activate
 ```
 
 3. Install dependencies:
