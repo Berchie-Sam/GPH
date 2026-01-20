@@ -1,4 +1,4 @@
-# Ghana Parliament Hansard Scraper
+# Ghana Parliamentary Hansard Data Scraper
 
 A modular Python tool to download and extract text from Ghana Parliament Hansard documents.
 
