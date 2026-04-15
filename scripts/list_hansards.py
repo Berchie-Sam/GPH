@@ -19,7 +19,7 @@ def main():
     print("="*80)
     
     with HansardScraper() as scraper:
-        hansards = scraper.get_document_list(page * 50)
+        hansards = scraper.get_document_list(page)
         
         if not hansards:
             print("No hansards found")
