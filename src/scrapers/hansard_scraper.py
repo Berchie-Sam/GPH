@@ -21,17 +21,31 @@ class HansardScraper(BaseScraper):
         super().__init__()
         self.pdf_parser = PDFParser()
     
+    def _normalise_page_offset(self, page: int) -> int:
+        """
+        Normalise input to the offset format expected by parliament.gh.
+
+        The site's own JavaScript navigates with ``&P=<offset>`` where each
+        page advances by ``RECORDS_PER_PAGE``. Support both 0-based page
+        numbers (0, 1, 2, ...) and legacy offsets (0, 50, 100, ...).
+        """
+        if page >= settings.RECORDS_PER_PAGE and page % settings.RECORDS_PER_PAGE == 0:
+            return page
+        return max(page, 0) * settings.RECORDS_PER_PAGE
+
     def get_document_list(self, page: int = 0) -> List[Hansard]:
         """
         Fetch list of available hansards from a specific page
         
         Args:
-            page: Page offset (0, 50, 100, etc.)
+            page: 0-based page number. Legacy record offsets like
+                0, 50, 100 are also accepted.
             
         Returns:
             List of Hansard objects
         """
-        url = f"{settings.DOCS_URL}&offset={page}"
+        page_offset = self._normalise_page_offset(page)
+        url = f"{settings.DOCS_URL}&P={page_offset}"
         
         try:
             response = self.http_session.get(url)
@@ -136,9 +150,9 @@ class HansardScraper(BaseScraper):
         print(f"🔍 Searching for hansard: {date_str}")
         
         # Search through pages
-        for page in range(0, settings.MAX_PAGES_TO_SEARCH * settings.RECORDS_PER_PAGE, settings.RECORDS_PER_PAGE):
-            print(f"   Checking page {page//settings.RECORDS_PER_PAGE + 1}...")
-            hansards = self.get_document_list(page)
+        for page_num in range(settings.MAX_PAGES_TO_SEARCH):
+            print(f"   Checking page {page_num + 1}...")
+            hansards = self.get_document_list(page_num)
             
             for h in hansards:
                 if date_str.lower() in h.date.lower() or date_str.lower() in h.title.lower():
@@ -209,13 +223,11 @@ class HansardScraper(BaseScraper):
         failed = []
         
         for page_num in range(start_page, start_page + num_pages):
-            page_offset = page_num * settings.RECORDS_PER_PAGE
-            
             print(f"\n{'='*80}")
             print(f"📄 FETCHING PAGE {page_num + 1}")
             print(f"{'='*80}")
             
-            hansards = self.get_document_list(page_offset)
+            hansards = self.get_document_list(page_num)
             
             if not hansards:
                 print("No more hansards found")
